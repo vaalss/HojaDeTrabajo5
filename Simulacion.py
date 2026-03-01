@@ -1,3 +1,5 @@
+#Valeria Hernández 25086
+
 import simpy
 import random
 
@@ -10,6 +12,9 @@ NUMERO_CPU = 1
 INSTRUCCIONES_CPU = 3
 
 def proceso(env, nombre, ram, cpu, quantum, tiempos):
+    #Simula el ciclo de un proceso
+    #Solicita RAM, ejecuta en CPU por quantum de instrucciones
+    #Puede pasar a I/O antes de terminar, y al finalizar devuelve la RAM
     tiempo_llegada = env.now
 
     memoria = random.randint(1, 10)
@@ -22,6 +27,7 @@ def proceso(env, nombre, ram, cpu, quantum, tiempos):
         with cpu.request() as req:
             yield req
 
+            #Ejecuta hasta quantum instrucciones en 1 unidad de tiempo
             ejecutar = min(instrucciones, quantum)
             yield env.timeout(1)
             instrucciones -= ejecutar
@@ -29,6 +35,7 @@ def proceso(env, nombre, ram, cpu, quantum, tiempos):
         if instrucciones <= 0:
             break
 
+        #Probabilidad de pasar a I/O (1/21)
         decision = random.randint(1, 21)
         if decision == 1:
             yield env.timeout(1)
@@ -40,6 +47,7 @@ def proceso(env, nombre, ram, cpu, quantum, tiempos):
 
 
 def generar_procesos(env, numero_procesos, intervalo, ram, cpu, quantum, tiempos):
+    #Genera los procesos con llegadas exponenciales
     for i in range(numero_procesos):
         env.process(proceso(env, f"Proceso-{i}", ram, cpu, quantum, tiempos))
         llegada = random.expovariate(1.0 / intervalo)
