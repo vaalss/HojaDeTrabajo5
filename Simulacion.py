@@ -83,7 +83,7 @@ def simular(numero_procesos, intervalo, ram_capacidad, numero_cpu, quantum):
 if __name__ == "__main__":
     promedio, desviacion = simular(NUM_PROCESOS, INTERVALO, RAM_CAPACIDAD, NUMERO_CPU, INSTRUCCIONES_CPU)
 
-    print ("Configración:")
+    print ("Configuración:")
     print (f"  Número de procesos: {NUM_PROCESOS}")
     print (f"  Intervalo de llegada: {INTERVALO}")
     print (f"  RAM: {RAM_CAPACIDAD}")
