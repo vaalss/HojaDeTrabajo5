@@ -5,15 +5,15 @@ import random
 
 RANDOM_SEED = 42
 
-NUM_PROCESOS = 25
-INTERVALO = 10
+NUM_PROCESOS = 200
+INTERVALO = 1
 RAM_CAPACIDAD = 100
-NUMERO_CPU = 1
+NUMERO_CPU = 2
 INSTRUCCIONES_CPU = 3
 
-def proceso(env, nombre, ram, cpu, quantum, tiempos):
+def proceso(env, nombre, ram, cpu, instrucciones_cpu, tiempos):
     #Simula el ciclo de un proceso
-    #Solicita RAM, ejecuta en CPU por quantum de instrucciones
+    #Solicita RAM, ejecuta en CPU por cierta cantidad de instrucciones
     #Puede pasar a I/O antes de terminar, y al finalizar devuelve la RAM
     tiempo_llegada = env.now
 
@@ -27,13 +27,10 @@ def proceso(env, nombre, ram, cpu, quantum, tiempos):
         with cpu.request() as req:
             yield req
 
-            #Ejecuta hasta quantum instrucciones en 1 unidad de tiempo
-            ejecutar = min(instrucciones, quantum)
+            #Ejecuta hasta ciertas cantidad de instrucciones en 1 unidad de tiempo
+            ejecutar = min(instrucciones, instrucciones_cpu)
             yield env.timeout(1)
             instrucciones -= ejecutar
-
-        if instrucciones <= 0:
-            break
 
         #Probabilidad de pasar a I/O (1/21)
         decision = random.randint(1, 21)
@@ -46,25 +43,25 @@ def proceso(env, nombre, ram, cpu, quantum, tiempos):
     tiempos.append(tiempo_total)
 
 
-def generar_procesos(env, numero_procesos, intervalo, ram, cpu, quantum, tiempos):
+def generar_procesos(env, numero_procesos, intervalo, ram, cpu, instrucciones_cpu, tiempos):
     #Genera los procesos con llegadas exponenciales
     for i in range(numero_procesos):
-        env.process(proceso(env, f"Proceso-{i}", ram, cpu, quantum, tiempos))
+        env.process(proceso(env, f"Proceso-{i}", ram, cpu, instrucciones_cpu, tiempos))
         llegada = random.expovariate(1.0 / intervalo)
         yield env.timeout(llegada)
 
 
-def simular(numero_procesos, intervalo, ram_capacidad, numero_cpu, quantum):
+def simular(numero_procesos, intervalo, ram, numero_cpu, instrucciones_cpu):
     random.seed(RANDOM_SEED)
     
     env = simpy.Environment()
 
-    ram = simpy.Container(env, init=ram_capacidad, capacity=ram_capacidad)
+    ram = simpy.Container(env, init=ram, capacity=ram)
     cpu = simpy.Resource(env, capacity=numero_cpu)
 
     tiempos = []
 
-    env.process(generar_procesos(env, numero_procesos, intervalo, ram, cpu, quantum, tiempos))
+    env.process(generar_procesos(env, numero_procesos, intervalo, ram, cpu, instrucciones_cpu, tiempos))
     env.run()
 
     if len(tiempos) > 0:
@@ -80,14 +77,14 @@ def simular(numero_procesos, intervalo, ram_capacidad, numero_cpu, quantum):
     return promedio, desviacion 
 
 
-if __name__ == "__main__":
-    promedio, desviacion = simular(NUM_PROCESOS, INTERVALO, RAM_CAPACIDAD, NUMERO_CPU, INSTRUCCIONES_CPU)
+#Llamada de la simulación
+promedio, desviacion = simular(NUM_PROCESOS, INTERVALO, RAM_CAPACIDAD, NUMERO_CPU, INSTRUCCIONES_CPU)
 
-    print ("Configuración:")
-    print (f"  Número de procesos: {NUM_PROCESOS}")
-    print (f"  Intervalo de llegada: {INTERVALO}")
-    print (f"  RAM: {RAM_CAPACIDAD}")
-    print (f"  Número de CPUs: {NUMERO_CPU}")
-    print (f"  Instrucciones por CPU: {INSTRUCCIONES_CPU}")
-    print (f"  Tiempo promedio: {promedio:.4f}")
-    print (f"  Desviación estándar: {desviacion:.4f}")
+print ("Configuración:")
+print (f"  Número de procesos: {NUM_PROCESOS}")
+print (f"  Intervalo de llegada: {INTERVALO}")
+print (f"  RAM: {RAM_CAPACIDAD}")
+print (f"  Número de CPUs: {NUMERO_CPU}")
+print (f"  Instrucciones por CPU: {INSTRUCCIONES_CPU}")
+print (f"  Tiempo promedio: {promedio:.4f}")
+print (f"  Desviación estándar: {desviacion:.4f}")
